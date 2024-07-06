@@ -10,9 +10,9 @@ create_conda_env:
 	poetry update
 
 git_push_all:
-	git add .
-	git commit -m "${MESSAGE}"
-	git push
+	@git add .
+	@git commit -m "${MESSAGE}"
+	@git push
 
 download_data:
 	@echo "Not yet"
