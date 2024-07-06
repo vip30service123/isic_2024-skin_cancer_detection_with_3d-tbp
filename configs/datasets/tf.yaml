@@ -1,0 +1,19 @@
+
+use_for: "Tensorflow"
+directory: data/raw/image
+labels: "inferred"
+label_mode: "int"
+class_names: None
+color_mode: "rgb"
+batch_size: 32
+image_size: [180, 180]
+shuffle: true
+seed: 42
+validation_split: 0.2
+subset: "training"
+interpolation: "bilinear"
+follow_links: false
+crop_to_aspect_ratio: false
+pad_to_aspect_ratio: false
+data_format: None
+verbose: true
