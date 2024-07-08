@@ -1,13 +1,13 @@
-from typing import Self, Union
+from typing import Union
 
 from omegaconf import DictConfig
+from tensorflow.keras.models import Sequential
 
-from .simple_model import BaseModel
-
+from .model_schema import BaseModel
 
 
 class SimpleModel(BaseModel):
-    def __init__(self, config: DictConfig) -> Self:
+    def __init__(self, config: DictConfig) -> None:
         self.config = config
         self._model = _instantiate_model()
     

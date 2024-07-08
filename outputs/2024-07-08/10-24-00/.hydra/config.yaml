@@ -1,0 +1,39 @@
+model:
+  include_top: true
+  weights: None
+  input_tensor: None
+  input_shape:
+  - 128
+  - 128
+  - 3
+  pooling: avg
+  classes: 2
+  classifier_activation: softmax
+meta_data:
+  train_meta_data_path: data/raw/train-metadata.csv
+  test_meta_data_path: data/raw/test-metadata.csv
+  augmentation_strategy: equal
+dataset:
+  use_for: Tensorflow
+  directory: data/raw/train-image.hdf5
+  labels: inferred
+  label_mode: int
+  class_names: None
+  color_mode: rgb
+  batch_size: 32
+  image_size:
+  - 180
+  - 180
+  shuffle: true
+  seed: 42
+  train_val_test_split:
+  - 0.8
+  - 0.1
+  - 0.1
+  subset: training
+  interpolation: bilinear
+  follow_links: false
+  crop_to_aspect_ratio: false
+  pad_to_aspect_ratio: false
+  data_format: None
+  verbose: true

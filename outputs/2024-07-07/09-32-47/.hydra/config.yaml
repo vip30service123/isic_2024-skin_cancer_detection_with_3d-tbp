@@ -1,0 +1,3 @@
+model: models/tf/resnet18.yaml
+meta_data: datasets/meta_data.yaml
+dataset: dataset/tf.yaml

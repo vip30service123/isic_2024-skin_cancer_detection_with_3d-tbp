@@ -1,0 +1,7 @@
+include_top: True
+weights: 'imagenet'
+input_tensor: 128
+input_shape: 128
+pooling: 'avg'
+classes: 1000
+classifier_activation: softmax

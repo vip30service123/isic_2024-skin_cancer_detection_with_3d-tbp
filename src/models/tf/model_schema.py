@@ -1,12 +1,12 @@
 from abc import abstractmethod
-from typing import Self, Union
+from typing import Union
 
 from omegaconf import DictConfig
 from tensorflow.keras.models import Sequential
 
 
 class BaseModel:
-    def __init__(self, config: DictConfig) -> Self:
+    def __init__(self, config: DictConfig) -> None:
         self.config = config
         self.model = _instantiate_model()
 

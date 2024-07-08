@@ -1,0 +1,7 @@
+include_top: False
+weights: null
+input_tensor: null
+input_shape: [128, 128, 3]
+pooling: 'avg' 
+classes: 2
+classifier_activation: 'softmax'
