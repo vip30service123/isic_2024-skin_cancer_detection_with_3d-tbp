@@ -10,18 +10,20 @@ from src.data_processing.tf.dataset import Dataset
 from src.models.tf.simple_model import SimpleModel
 
 
-def train(config: DictConfig) -> None:
-    pass
-
-
 @hydra.main(config_path="configs", config_name="config.yaml", version_base=None)
 def main(config: DictConfig) -> None:
-    print(OmegaConf.to_yaml(config))
-
+    do_create_new_dataset = config['do_create_new_dataset']
     dataset = Dataset(config=config)
-    dataset.prepare_dataset()
-    train_ds, val_ds, test_ds = dataset.train_test_split()
+    if do_create_new_dataset:
+        dataset.augmentation()
+        dataset.prepare_dataset()
+        dataset.save_dataset()
+    else:
+        dataset.load_dataset()
+    print("#### Train test split")
+    train_ds, val_ds, test_ds = dataset.train_test_split()    
     print(len(list(train_ds)), len(list(val_ds)), len(list(test_ds)))
+
 
     model = tf.keras.applications.ResNet50(
         include_top=config['model']['include_top'],
@@ -37,14 +39,15 @@ def main(config: DictConfig) -> None:
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
-    print(model.summary())
-
-    epochs=10
-    history = model.fit(
+    epochs=config['training']['epochs']
+    model.fit(
         train_ds,
         validation_data=val_ds,
         epochs=epochs
     )
+
+    save_model_path = config['model']['save_model_path']
+    model.save(os.path.join(save_model_path, "first.keras"))
 
 
 if __name__=="__main__":

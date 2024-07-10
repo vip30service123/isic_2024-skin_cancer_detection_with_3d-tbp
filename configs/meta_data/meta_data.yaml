@@ -1,3 +1,4 @@
 train_meta_data_path: data/raw/train-metadata.csv
 test_meta_data_path: data/raw/test-metadata.csv
 augmentation_strategy: "equal"
+save_train_meta_data_path: data/processed/processed-train-metadata.csv

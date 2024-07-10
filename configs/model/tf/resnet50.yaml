@@ -1,7 +1,8 @@
 include_top: False
 weights: null
 input_tensor: null
-input_shape: [128, 128, 3]
+input_shape: [64, 64, 3]
 pooling: 'avg' 
 classes: 2
 classifier_activation: 'softmax'
+save_model_path: models/tf

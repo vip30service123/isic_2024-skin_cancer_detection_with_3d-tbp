@@ -33,7 +33,6 @@ class Dataset(BaseDataset):
         dataset_len = 10000
         train_sz = int(dataset_len * train_ratio)
         val_sz = int(dataset_len * val_ratio)
-        test_sz = dataset_len - train_sz - val_sz
 
         self.dataset = self.dataset.shuffle(10, seed=self.config['dataset']['seed'])
         train_ds = self.dataset.take(train_sz).batch(self.config['dataset']['batch_size'])
@@ -44,10 +43,6 @@ class Dataset(BaseDataset):
 
 
     def prepare_dataset(self) -> None:
-        # Augmentation
-        self._augmentation()
-
-        # Dataset
         labels = self.train_metadata['target'].copy().tolist()[:10000]
         isic_ids = self.train_metadata['isic_id'].copy().tolist()[:10000]
 
@@ -70,21 +65,22 @@ class Dataset(BaseDataset):
         return self.dataset
 
 
-    def _augmentation(self) -> None:
+    def augmentation(self) -> None:
         if self.config['meta_data']['augmentation_strategy'] == "equal":
-            less_label_ids = self.train_metadata[self.train_metadata['target'] == 1]['isic_id'].copy().tolist()
-            num_more_labels = self.train_metadata[self.train_metadata['target'] == 1].shape[1]
+            print("Start augmenting")
+            num_less_labels = self.train_metadata[self.train_metadata['target'] == 1].shape[0]
+            num_more_labels = self.train_metadata[self.train_metadata['target'] == 0].shape[0]
 
-            for _ in tqdm(range(num_more_labels-len(less_label_ids)), desc="augmentation"):
-                random_id = random.choice(less_label_ids)
-                new_line = self.train_metadata[self.train_metadata['isic_id'] == random_id].copy()
+            sample_1_df = self.train_metadata[self.train_metadata['target'] == 1].sample(num_more_labels-num_less_labels, replace=True, random_state=1)
 
-                self.train_metadata = pd.concat([self.train_metadata, new_line], axis=0)
+            self.train_metadata = pd.concat([self.train_metadata, sample_1_df], axis=0)
 
-    
+            self.train_metadata = self.train_metadata.sample(frac=1)
+
+
     def save_dataset(self) -> None:
-        pass
+        self.dataset.save(self.config['dataset']['save_dataset_path'])
 
 
-    def load_dataset(self) -> Optional[tf.data.Dataset]:
-        pass
+    def load_dataset(self) -> None:
+        self.dataset = tf.data.Dataset.load(self.config['dataset']['save_dataset_path'])
