@@ -1,8 +1,13 @@
+"""
+Outdated,just put here, not use
+"""
+
+
 import io
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-from PIL import Image 
+from PIL import Image
 import random
 from tqdm.auto import tqdm
 from typing import Optional, Tuple
@@ -30,7 +35,7 @@ class Dataset(BaseDataset):
 
     def train_test_split(self) -> Tuple:
         train_ratio, val_ratio, test_radio = self.config['dataset']['train_val_test_split']
-        dataset_len = 10000
+        dataset_len = 1000
         train_sz = int(dataset_len * train_ratio)
         val_sz = int(dataset_len * val_ratio)
 
@@ -43,8 +48,8 @@ class Dataset(BaseDataset):
 
 
     def prepare_dataset(self) -> None:
-        labels = self.train_metadata['target'].copy().tolist()[:10000]
-        isic_ids = self.train_metadata['isic_id'].copy().tolist()[:10000]
+        labels = self.train_metadata['target'].copy().tolist()[:1000]
+        isic_ids = self.train_metadata['isic_id'].copy().tolist()[:1000]
 
         with h5py.File(self.config['dataset']['directory']) as f:
             data = []
@@ -56,7 +61,7 @@ class Dataset(BaseDataset):
                 pix = np.array(im)
                 data.append(pix)
                 del im, pix
-            dataset = tf.data.Dataset.from_tensor_slices((data, labels)) 
+            dataset = tf.data.Dataset.from_tensor_slices((data, labels))
         self.dataset = dataset
         del dataset
 
