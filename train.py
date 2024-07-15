@@ -9,9 +9,12 @@ from omegaconf import DictConfig, OmegaConf
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
+import torch
+from torch import nn
+import torchvision
 
 from src.data_processing.tf.dataset import Dataset
-from src.models.tf.simple_model import SimpleModel
+from src.models.tf.resnet50 import Resnet50
 from src.data_processing.tf.dataset_processing import DatasetProcessor
 
 # tf.keras.config.disable_traceback_filtering()
@@ -19,66 +22,46 @@ from src.data_processing.tf.dataset_processing import DatasetProcessor
 
 @hydra.main(config_path="configs", config_name="config.yaml", version_base=None)
 def main(config: DictConfig) -> None:
-    # do_create_new_dataset = config['do_create_new_dataset']
-    # dataset = Dataset(config=config)
-    # if do_create_new_dataset:
-    #     dataset.augmentation()
-    #     dataset.prepare_dataset()
-    #     dataset.save_dataset()
-    # else:
-    #     dataset.load_dataset()
-    # print("#### Train test split")
-    # train_ds, val_ds, test_ds = dataset.train_test_split()
-    # print(len(list(train_ds)), len(list(val_ds)), len(list(test_ds)))
+    model_type = "torch"
 
+    if model_type == "tf":
+        data_processor = DatasetProcessor()
+        df = data_processor.get_train_metadata_df(config)
+        df = data_processor.get_id_target_columns(df)
+        df = data_processor.augmentation(df, config)
+        df = data_processor.shuffle_df(df, config)
 
-    data_processor = DatasetProcessor()
-    df = data_processor.get_train_metadata_df(config)
-    df = data_processor.get_id_target_columns(df)
-    df = data_processor.augmentation(df, config)
-    df = data_processor.shuffle_df(df, config)
+        train_df, test_df = data_processor.train_test_split(df, config)
 
-    train_df, test_df = data_processor.train_test_split(df, config)
+        train_ds_len = config['dataset']['train_ds_len']
+        test_ds_len = config['dataset']['test_ds_len']
 
-    train_ds_len = config['dataset']['train_ds_len']
-    test_ds_len = config['dataset']['test_ds_len']
+        train_ds = data_processor.dataset_from_generator(train_df['isic_id'].tolist()[:train_ds_len], train_df['target'].tolist()[:train_ds_len], config).repeat()
+        test_ds = data_processor.dataset_from_generator(test_df['isic_id'].tolist()[:test_ds_len], test_df['target'].tolist()[:test_ds_len], config).repeat()
 
-    train_ds = data_processor.dataset_from_generator(train_df['isic_id'].tolist()[:train_ds_len], train_df['target'].tolist()[:train_ds_len], config).repeat()
-    test_ds = data_processor.dataset_from_generator(test_df['isic_id'].tolist()[:test_ds_len], test_df['target'].tolist()[:test_ds_len], config).repeat()
+        batch_sz = config['dataset']['batch_size']
+        train_ds = train_ds.batch(batch_sz)
+        test_ds = test_ds.batch(batch_sz)
 
-    batch_sz = config['dataset']['batch_size']
-    train_ds = train_ds.batch(batch_sz)
-    test_ds = test_ds.batch(batch_sz)
+        model = Resnet50.from_config(config, show_summary=True)
 
-    model = tf.keras.applications.ResNet50(
-        include_top=config['model']['include_top'],
-        weights=config['model']['weights'],
-        input_tensor=config['model']['input_tensor'],
-        input_shape=config['model']['input_shape'],
-        pooling=config['model']['pooling'],
-        classes=config['model']['classes'],
-        classifier_activation=config['model']['classifier_activation']
-    )
+        epochs=config['training']['epochs']
+        steps_per_epoch = train_ds_len//batch_sz
+        validation_steps = test_ds_len//batch_sz
 
-    model.summary()
+        model.fit(
+            train_ds,
+            validation_data=test_ds,
+            epochs=epochs,
+            steps_per_epoch=steps_per_epoch,
+            validation_steps=validation_steps,
+        )
 
-    model.compile(optimizer='adam',
-                  loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
-                  metrics=['accuracy'])
-
-    epochs=config['training']['epochs']
-    steps_per_epoch = train_ds_len//batch_sz
-    validation_steps = test_ds_len//batch_sz
-    model.fit(
-        train_ds,
-        validation_data=test_ds,
-        epochs=epochs,
-        steps_per_epoch=steps_per_epoch,
-        validation_steps=validation_steps,
-    )
-
-    save_model_path = config['model']['save_model_path']
-    model.save(os.path.join(save_model_path, "first.keras"))
+        save_model_path = config['model']['save_model_path']
+        model.save(os.path.join(save_model_path, "first.keras"))
+    elif model_type == "torch":
+        model = torchvision.models.resnet50(out_features=1000)
+        print(model)
 
 
 if __name__=="__main__":
