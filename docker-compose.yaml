@@ -1,0 +1,11 @@
+version: '1'
+
+volumes:
+  save_models: 
+
+services:
+  train:
+    build: 
+      dockerfile: Dockerfile
+    volumes:
+      - save_models:save_models

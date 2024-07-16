@@ -3,8 +3,6 @@
 - Should specify model for scaling
 """
 
-
-
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -21,11 +19,12 @@ from torch import nn
 import torchvision
 from torch.utils.data import DataLoader
 
-from src.data.tf.dataset import DatasetFromGenerator
+from src.dataset.tf.dataset import DatasetFromGenerator
 from src.models.tf.resnet50 import Resnet50 as TFResnet50
 from src.models.torch.resnet50 import Resnet50 as TorchResnet50
-from src.data.dataset_processing import *
-from src.data.torch.dataset import CustomDataset
+from src.dataset.dataset_processing import *
+from src.dataset.torch.dataset import CustomDataset
+from src.models.torch.trainer import trainer
 
 
 @hydra.main(config_path="configs", config_name="config.yaml", version_base=None)
@@ -127,8 +126,21 @@ def main(config: DictConfig) -> None:
             batch_size=batch_sz
         )
 
-        model = TorchResnet50(config)
+        item = next(iter(train_dl))
 
+        model = TorchResnet50()
+
+        print(model(item['image'], item['label']))
+        print(model(item['image']))
+
+        optimizer = torch.optim.Adam(model.parameters())
+
+        trainer(
+            train_dl=train_dl,
+            model=model,
+            optimizer=optimizer,
+            validate_dl=test_dl
+        )
 
 if __name__=="__main__":
     main()

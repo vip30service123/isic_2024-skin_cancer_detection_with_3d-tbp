@@ -1,3 +1,4 @@
+from typing import Dict
 
 from omegaconf import DictConfig
 import torch
@@ -6,10 +7,9 @@ import torchvision
 
 
 class Resnet50(nn.Module):
-    def __init__(self, config: DictConfig):
+    def __init__(self):
         super().__init__()
 
-        self.config = config
         self.model = torchvision.models.resnet50()
         self.model.fc = torch.nn.Sequential(
             torch.nn.Linear(
@@ -21,15 +21,13 @@ class Resnet50(nn.Module):
 
         self.loss_fn = nn.CrossEntropyLoss()
 
-    def forward(self, image: torch.Tensor, label: torch.Tensor = None):
+    def forward(self, image: torch.Tensor, label: torch.Tensor = None) -> Dict:
         output = self.model(image)
-        if type(label) != None:
+        loss = None
+        if label is not None:
             loss = self.loss_fn(output, label)
-            return {
-                "logits": output,
-                "loss": loss
-            }
-        else:
-            return {
-                "logits": output
-            }
+        
+        return {
+            "logits": output,
+            "loss": loss
+        }
