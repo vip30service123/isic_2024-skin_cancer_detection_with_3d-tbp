@@ -4,5 +4,3 @@ defaults:
   - dataset: tf.yaml
   - training: tf/tf.yaml
   - _self_
-
-do_create_new_dataset: true

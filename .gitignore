@@ -1,2 +1,4 @@
-data
-models
+data/
+models/
+.envs/
+outputs/

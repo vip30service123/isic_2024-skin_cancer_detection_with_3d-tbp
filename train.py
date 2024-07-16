@@ -1,3 +1,10 @@
+"""
+- Dataset seems fixed
+- Should specify model for scaling
+"""
+
+
+
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
