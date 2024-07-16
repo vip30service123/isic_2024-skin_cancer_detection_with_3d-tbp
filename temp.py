@@ -1,6 +1,19 @@
-import time
-from tqdm.auto import tqdm
+class Nothing:
+    haha:int = None
+
+    def __init__(self):
+        self.haha = "lala"
+
+    def nothing(self):
+        print(self.haha)
+
+class Haha(Nothing):
+    pass
 
 
-for i in tqdm(range(10)):
-    time.sleep(1)
+class What(Nothing):
+    pass
+
+
+for cls in Nothing.__subclasses__():
+    print(cls)

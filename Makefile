@@ -16,3 +16,10 @@ git_push_all:
 
 download_data:
 	@echo "Not yet"
+
+train_tf:
+	@python train.py +model_type='tf'
+
+train_torch:
+	@python train.py +model_type='torch'
+

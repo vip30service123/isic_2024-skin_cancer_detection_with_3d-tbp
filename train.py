@@ -12,38 +12,47 @@ from tensorflow.keras.models import Sequential
 import torch
 from torch import nn
 import torchvision
+from torch.utils.data import DataLoader
 
-from src.data_processing.tf.dataset import Dataset
-from src.models.tf.resnet50 import Resnet50
-from src.data_processing.tf.dataset_processing import DatasetProcessor
-
-# tf.keras.config.disable_traceback_filtering()
+from src.data.tf.dataset import DatasetFromGenerator
+from src.models.tf.resnet50 import Resnet50 as TFResnet50
+from src.models.torch.resnet50 import Resnet50 as TorchResnet50
+from src.data.dataset_processing import *
+from src.data.torch.dataset import CustomDataset
 
 
 @hydra.main(config_path="configs", config_name="config.yaml", version_base=None)
 def main(config: DictConfig) -> None:
-    model_type = "torch"
+    df = GetTrainMetadataDF()(config)
+    df = GetMainAttribute()(df)
+    df = Augmentating(config['meta_data']['augmentation_strategy'])(df, config)
+    df = SuffleDataset()(df, config)
+
+    train_df, test_df = TrainTestSplit()(df, config)
+
+    if 'model_type' in config:
+        model_type = config['model_type']
+    else:
+        model_type = 'tf'
 
     if model_type == "tf":
-        data_processor = DatasetProcessor()
-        df = data_processor.get_train_metadata_df(config)
-        df = data_processor.get_id_target_columns(df)
-        df = data_processor.augmentation(df, config)
-        df = data_processor.shuffle_df(df, config)
-
-        train_df, test_df = data_processor.train_test_split(df, config)
-
         train_ds_len = config['dataset']['train_ds_len']
         test_ds_len = config['dataset']['test_ds_len']
 
-        train_ds = data_processor.dataset_from_generator(train_df['isic_id'].tolist()[:train_ds_len], train_df['target'].tolist()[:train_ds_len], config).repeat()
-        test_ds = data_processor.dataset_from_generator(test_df['isic_id'].tolist()[:test_ds_len], test_df['target'].tolist()[:test_ds_len], config).repeat()
+        if not train_ds_len and not test_ds_len:
+            train_ds = DatasetFromGenerator(train_df['isic_id'].tolist(), train_df['target'].tolist(), config).repeat()
+            test_ds = DatasetFromGenerator(test_df['isic_id'].tolist()[:test_ds_len], test_df['target'].tolist()[:test_ds_len], config).repeat()
+        elif train_ds_len and test_ds_len:
+            train_ds = DatasetFromGenerator(train_df['isic_id'].tolist(), train_df['target'].tolist(), config).repeat()
+            test_ds = DatasetFromGenerator(test_df['isic_id'].tolist()[:test_ds_len], test_df['target'].tolist()[:test_ds_len], config).repeat()
+        else:
+            raise Exception("Either full train or train small size on both train and test dataset.")
 
         batch_sz = config['dataset']['batch_size']
         train_ds = train_ds.batch(batch_sz)
         test_ds = test_ds.batch(batch_sz)
 
-        model = Resnet50.from_config(config, show_summary=True)
+        model = TFResnet50()(config, show_summary=True)
 
         epochs=config['training']['epochs']
         steps_per_epoch = train_ds_len//batch_sz
@@ -59,9 +68,59 @@ def main(config: DictConfig) -> None:
 
         save_model_path = config['model']['save_model_path']
         model.save(os.path.join(save_model_path, "first.keras"))
+
     elif model_type == "torch":
-        model = torchvision.models.resnet50(out_features=1000)
-        print(model)
+        transform_pipe = torchvision.transforms.Compose([
+            torchvision.transforms.ToPILImage(),
+            torchvision.transforms.Resize(
+                size=(224, 224)
+            ),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            )
+        ])
+
+        train_ds_len = config['dataset']['train_ds_len']
+        test_ds_len = config['dataset']['test_ds_len']
+
+        if not train_ds_len and not test_ds_len:
+            train_ds = CustomDataset(
+                train_df['isic_id'].tolist(), 
+                train_df['target'].tolist(), 
+                config,
+                transform=transform_pipe)
+            test_ds = CustomDataset(
+                test_df['isic_id'].tolist(), 
+                test_df['target'].tolist(), 
+                config,
+                transform=transform_pipe)
+        elif train_ds_len and test_ds_len:
+            train_ds = CustomDataset(
+                train_df['isic_id'].tolist()[:train_ds_len], 
+                train_df['target'].tolist()[:train_ds_len], 
+                config,
+                transform=transform_pipe)
+            test_ds = CustomDataset(
+                test_df['isic_id'].tolist()[:test_ds_len], 
+                test_df['target'].tolist()[:test_ds_len], 
+                config,
+                transform=transform_pipe)
+        else:
+            raise Exception("Either full train or train small size on both train and test dataset.")
+        
+        batch_sz = config['dataset']['batch_size']
+        train_dl = DataLoader(
+            train_ds,
+            batch_size=batch_sz
+        )
+        test_dl = DataLoader(
+            test_ds,
+            batch_size=batch_sz
+        )
+
+        model = TorchResnet50(config)
 
 
 if __name__=="__main__":

@@ -2,7 +2,7 @@ defaults:
   - model: tf/resnet50.yaml
   - meta_data: meta_data.yaml
   - dataset: tf.yaml
-  - training: tf.yaml
+  - training: tf/tf.yaml
   - _self_
 
 do_create_new_dataset: true
