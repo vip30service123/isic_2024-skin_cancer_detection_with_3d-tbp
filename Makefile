@@ -18,8 +18,8 @@ download_data:
 	@echo "Not yet"
 
 train_tf:
-	@python train.py +model_type='tf'
+	@python train.py model_type='tf'
 
 train_torch:
-	@python train.py +model_type='torch'
+	@python train.py model_type='torch' model='torch/resnet50.yaml' training='torch/trainer.yaml'
 

@@ -6,9 +6,8 @@
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-import math
-
 import hydra
+from hydra.utils import instantiate
 from mlflow.models.signature import infer_signature
 from omegaconf import DictConfig, OmegaConf
 import tensorflow as tf
@@ -126,20 +125,23 @@ def main(config: DictConfig) -> None:
             batch_size=batch_sz
         )
 
-        item = next(iter(train_dl))
+        model = instantiate(config['model'])
 
-        model = TorchResnet50()
+        partial_optimizer = instantiate(config['training']['optimizer'])
+        optimizer = partial_optimizer(params=model.parameters())
 
-        print(model(item['image'], item['label']))
-        print(model(item['image']))
+        epochs = config['training']['epochs']
 
-        optimizer = torch.optim.Adam(model.parameters())
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        print("Device: ", device)
 
         trainer(
             train_dl=train_dl,
             model=model,
             optimizer=optimizer,
-            validate_dl=test_dl
+            validate_dl=test_dl,
+            epochs=epochs,
+            device=device
         )
 
 if __name__=="__main__":

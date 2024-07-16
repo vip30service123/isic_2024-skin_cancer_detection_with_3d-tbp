@@ -1,10 +1,5 @@
-
-
-
 from omegaconf import DictConfig, OmegaConf
 import tensorflow as tf
-
-
 
 
 class Resnet50:

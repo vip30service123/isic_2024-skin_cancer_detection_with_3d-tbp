@@ -1,0 +1,4 @@
+
+_target_: src.models.torch.resnet50.Resnet50
+num_classes: 2
+

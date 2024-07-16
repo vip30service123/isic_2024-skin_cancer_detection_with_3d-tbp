@@ -4,3 +4,5 @@ defaults:
   - dataset: tf.yaml
   - training: tf/tf.yaml
   - _self_
+
+model_type: tf

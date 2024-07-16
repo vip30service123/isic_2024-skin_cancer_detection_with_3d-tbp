@@ -7,14 +7,14 @@ import torchvision
 
 
 class Resnet50(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes: int = 2):
         super().__init__()
 
         self.model = torchvision.models.resnet50()
         self.model.fc = torch.nn.Sequential(
             torch.nn.Linear(
                 in_features=2048,
-                out_features=2
+                out_features=num_classes
             ),
             torch.nn.Sigmoid()
         )
