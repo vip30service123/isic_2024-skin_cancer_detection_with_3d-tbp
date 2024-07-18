@@ -9,4 +9,7 @@ ISIC 2024 - Skin Cancer Detection with 3D-TBP - Kaggle competition
 - Modify configs </br>
 - Clean code </br>
 - Change print into log </br>
-- Deploy on GCP
+- Deploy on GCP </br>
+- Inference using streamlit </br>
+- Change conda installation </br>
+- Fix Docker </br>
