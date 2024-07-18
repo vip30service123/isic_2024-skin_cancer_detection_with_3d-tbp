@@ -87,7 +87,7 @@ def main(config: DictConfig) -> None:
                 mean=[0.485, 0.456, 0.406],
                 std=[0.229, 0.224, 0.225]
             )
-        ])
+        ]) # This is urgly
 
         train_ds_len = config['dataset']['train_ds_len']
         test_ds_len = config['dataset']['test_ds_len']
@@ -148,13 +148,14 @@ def main(config: DictConfig) -> None:
             device=device
         )
 
-        trainer.train()
+        # trainer.train()
 
-        time = str(datetime.datetime.now()).replace(' ', '-')
+        time = str(datetime.datetime.now()).replace(' ', '-').replace(':', '_')
 
         model_save_path = config['model']['save_model_path'] + "_" + time + ".pt"
 
-        torch.save(model, model_save_path)
+        torch.save(model.state_dict(), model_save_path)
+
 
 if __name__=="__main__":
     main()
