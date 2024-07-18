@@ -10,13 +10,9 @@ import datetime
 
 import hydra
 from hydra.utils import instantiate
-from mlflow.models.signature import infer_signature
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 import tensorflow as tf
-from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential
 import torch
-from torch import nn
 import torchvision
 from torch.utils.data import DataLoader
 
@@ -77,18 +73,6 @@ def main(config: DictConfig) -> None:
         model.save(os.path.join(save_model_path, "first.keras"))
 
     elif model_type == "torch":
-        transform_pipe = torchvision.transforms.Compose([
-            torchvision.transforms.ToPILImage(),
-            torchvision.transforms.Resize(
-                size=(224, 224)
-            ),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225]
-            )
-        ]) # This is urgly
-
         train_ds_len = config['dataset']['train_ds_len']
         test_ds_len = config['dataset']['test_ds_len']
 
@@ -96,24 +80,20 @@ def main(config: DictConfig) -> None:
             train_ds = CustomDataset(
                 train_df['isic_id'].tolist(), 
                 train_df['target'].tolist(), 
-                config,
-                transform=transform_pipe)
+                config,)
             test_ds = CustomDataset(
                 test_df['isic_id'].tolist(), 
                 test_df['target'].tolist(), 
-                config,
-                transform=transform_pipe)
+                config,)
         elif train_ds_len and test_ds_len:
             train_ds = CustomDataset(
                 train_df['isic_id'].tolist()[:train_ds_len], 
                 train_df['target'].tolist()[:train_ds_len], 
-                config,
-                transform=transform_pipe)
+                config,)
             test_ds = CustomDataset(
                 test_df['isic_id'].tolist()[:test_ds_len], 
                 test_df['target'].tolist()[:test_ds_len], 
-                config,
-                transform=transform_pipe)
+                config,)
         else:
             raise Exception("Either full train or train small size on both train and test dataset.")
         
@@ -148,7 +128,7 @@ def main(config: DictConfig) -> None:
             device=device
         )
 
-        # trainer.train()
+        trainer.train()
 
         time = str(datetime.datetime.now()).replace(' ', '-').replace(':', '_')
 

@@ -9,14 +9,23 @@ import torch
 import torchvision
 from torch.utils.data import Dataset
 
+from src.dataset.torch.transforms import DefaultTransform
 
 
 class CustomDataset(Dataset):
-    def __init__(self, isic_ids: List[str], targets: List[int], config: DictConfig, transform: torchvision.transforms.Compose):
+    def __init__(self, isic_ids: List[str], targets: List[int], config: DictConfig, transform: torchvision.transforms.Compose = None):
         self.isic_ids = isic_ids
         self.config = config
         self.targets = targets
-        self.transform = transform
+
+        if transform:
+            self.transform = transform
+        else:
+            self._initial_transform()
+
+
+    def _initial_transform(self):
+        self.transform = DefaultTransform()
 
 
     def __len__(self) -> int:
@@ -40,3 +49,4 @@ class CustomDataset(Dataset):
             "image": pix, 
             "label": target
         }
+

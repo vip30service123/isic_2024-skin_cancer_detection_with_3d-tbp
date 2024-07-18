@@ -12,3 +12,5 @@ train_tf:
 train_torch:
 	@python train.py model_type='torch' model='torch/resnet50.yaml' training='torch/trainer.yaml'
 
+inference:
+	@streamlit run inference.py
