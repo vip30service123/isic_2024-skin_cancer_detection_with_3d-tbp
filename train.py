@@ -151,7 +151,8 @@ def main(config: DictConfig) -> None:
         time = str(datetime.datetime.now()).replace(' ', '-')
 
         model_save_path = config['model']['save_model_path'] + "_" + time + ".pt"
-        model.save(model_save_path)
+
+        torch.save(model, model_save_path)
 
 if __name__=="__main__":
     main()
