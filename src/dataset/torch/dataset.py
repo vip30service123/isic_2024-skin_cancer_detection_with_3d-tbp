@@ -6,9 +6,9 @@ import numpy as np
 from omegaconf import DictConfig
 from PIL import Image
 import torch
-from torch import nn
 import torchvision
 from torch.utils.data import Dataset
+
 
 
 class CustomDataset(Dataset):

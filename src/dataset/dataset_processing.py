@@ -10,7 +10,10 @@ Liskov's substitution principle:
 - State that there is a series of properties that an object type must hold to preserve reliability on its design.
 - If S is exteneded from T, then object of type T can be replace with object of type S without breaking any behaviors.
 Interface segregation:
-
+- The only thing in this file that require interface (though it's abstract) is Augmentation, but it's simplified enough.
+Dependency injection:
+- The idea is a class should not depend on concrete class, but depend on it's interface instead. If concrete class changes, the outcome will not affect the class that we are working on.
+- This code doesn't have class that depend on other class. However, I will write classes that depend on these classes in the future.
 """
 
 import os
@@ -18,7 +21,12 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 import io
 from tqdm.auto import tqdm
-from typing import Any, List, Tuple
+from typing import (
+    Any, 
+    List,
+    Optional, 
+    Tuple
+)
 
 import h5py
 import numpy as np
@@ -37,7 +45,21 @@ class DatasetProcessor:
 
 
 class SuffleDataset(DatasetProcessor):
-    def __call__(self, df: pd.DataFrame, config: DictConfig) -> pd.DataFrame:
+    def __call__(
+        self, 
+        df: pd.DataFrame, 
+        config: DictConfig
+    ) -> pd.DataFrame:
+        """Shuffle the pandas dataset.
+
+        Args:
+            df: input dataframe.
+            config: config that contains random seed.
+        
+        Returns:
+            Shuffled dataframe.
+        """
+        
         assert type(df) == pd.DataFrame, f"df must be of type pd.DataFrame, not {type(df)}"
         assert type(config) == DictConfig, f"config must be of type Dictconfig, not {type(config)}"
 
@@ -46,7 +68,12 @@ class SuffleDataset(DatasetProcessor):
 
 
 class GetMainAttribute(DatasetProcessor):
-    def __call__(self, df: pd.DataFrame) -> pd.DataFrame:
+    def __call__(
+        self, 
+        df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """Return dataframe that only has two attributes: isic_id and target."""
+        
         assert type(df) == pd.DataFrame, f"df must be of type pd.DataFrame, not {type(df)}"
 
         return df[['isic_id', 'target']]
@@ -56,15 +83,27 @@ class GetMainAttribute(DatasetProcessor):
 class Augmentation(DatasetProcessor):
     @staticmethod
     def check_event(event_type: str) -> bool:
+        """To check if this event is used or not."""
+
         assert type(event_type) == str, f"event_type must be of type string, not {type(event_type)}"
 
         return False
 
 
-    def __call__(self, df: pd.DataFrame, config: DictConfig) -> pd.DataFrame:
-        assert type(df) == pd.DataFrame, f"df must be of type pd.DataFrame, not {type(df)}"
-        assert type(config) == DictConfig, f"config must be of type Dictconfig, not {type(config)}"
+    def __call__(
+        self, 
+        df: pd.DataFrame, 
+        config: DictConfig
+    ) -> pd.DataFrame:
+        """Augmenting the dataframe based on the config.
 
+        Args:
+            df: input dataframe.
+            config: config that contains random seed.
+
+        Returns:
+            Augmented dataframe.
+        """
         pass
 
 
@@ -72,12 +111,18 @@ class Augmentation(DatasetProcessor):
 class EqualAugmentation(Augmentation):
     @staticmethod
     def check_event(event_type: str) -> bool:
+
         assert type(event_type) == str, f"df must be of type string, not {type(event_type)}"
 
         return event_type == "equal"
 
 
-    def __call__(self, df: pd.DataFrame, config: DictConfig) -> pd.DataFrame:
+    def __call__(
+        self, 
+        df: pd.DataFrame, 
+        config: DictConfig
+    ) -> pd.DataFrame:
+        
         assert type(df) == pd.DataFrame, f"df must be of type pd.DataFrame, not {type(df)}"
         assert type(config) == DictConfig, f"config must be of type Dictconfig, not {type(config)}"
 
@@ -92,13 +137,31 @@ class EqualAugmentation(Augmentation):
 
 
 class Augmentating(DatasetProcessor):
-    def __init__(self, augmentation_type: str = 'equal'):
+    def __init__(
+        self, 
+        augmentation_type: str = 'equal'
+    ):
+        
         assert type(augmentation_type) == str, f"augmentation_type must be of type string, not {type(augmentation_type)}"
 
         self.augmentation_type = augmentation_type
 
 
-    def __call__(self, df: pd.DataFrame, config: DictConfig) -> pd.DataFrame:
+    def __call__(
+        self, 
+        df: pd.DataFrame, 
+        config: DictConfig
+    ) -> Optional[pd.DataFrame]:
+        """Augment dataframe based on augmentation_type.
+        
+        Args:
+            df: input dataframe.
+            config: config that contains augmentation type.
+
+        Returns:
+            Augmented dataframe or None if augmentation_type not found.
+        """
+
         assert type(df) == pd.DataFrame, f"df must be of type pd.DataFrame, not {type(df)}"
         assert type(config) == DictConfig, f"config must be of type Dictconfig, not {type(config)}"
 
@@ -108,11 +171,26 @@ class Augmentating(DatasetProcessor):
                     df=df,
                     config=config
                 )
+            
+        return None
 
 
 
 class TrainTestSplit(DatasetProcessor):
-    def __call__(self, df: pd.DataFrame, config: DictConfig) -> Tuple:
+    def __call__(
+        self, 
+        df: pd.DataFrame, 
+        config: DictConfig
+    ) -> Tuple:
+        """Split dataframe into train dataframe and test dataframe.
+
+        Args:
+            df: input dataframe.
+            config: config that contains train-test ratio.
+        
+        Returns:
+            Train dataframe and test dataframe.        
+        """
         assert type(df) == pd.DataFrame, f"df must be of type pd.DataFrame, not {type(df)}"
         assert type(config) == DictConfig, f"config must be of type Dictconfig, not {type(config)}"
 
@@ -131,6 +209,8 @@ class TrainTestSplit(DatasetProcessor):
 
 class GetTrainMetadataDF(DatasetProcessor):
     def __call__(self, config: DictConfig) -> pd.DataFrame:
+        """Load train meta dataframe."""
+
         assert type(config) == DictConfig, f"config must be of type Dictconfig, not {type(config)}"
 
         return pd.read_csv(config['meta_data']['train_meta_data_path'])
@@ -139,6 +219,8 @@ class GetTrainMetadataDF(DatasetProcessor):
 
 class GetTestMetadataDF(DatasetProcessor):
     def __call__(self, config: DictConfig) -> pd.DataFrame:
+        """Load test meta dataframe."""
+
         assert type(config) == DictConfig, f"config must be of type Dictconfig, not {type(config)}"
 
         return pd.read_csv(config['meta_data']['test_meta_data_path'])

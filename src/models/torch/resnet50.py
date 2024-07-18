@@ -21,6 +21,7 @@ class Resnet50(nn.Module):
 
         self.loss_fn = nn.CrossEntropyLoss()
 
+
     def forward(self, image: torch.Tensor, label: torch.Tensor = None) -> Dict:
         output = self.model(image)
         loss = None

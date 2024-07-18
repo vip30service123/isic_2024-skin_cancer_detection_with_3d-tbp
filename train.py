@@ -25,7 +25,7 @@ from src.models.tf.resnet50 import Resnet50 as TFResnet50
 from src.models.torch.resnet50 import Resnet50 as TorchResnet50
 from src.dataset.dataset_processing import *
 from src.dataset.torch.dataset import CustomDataset
-from src.models.torch.trainer import trainer
+from src.models.torch.trainer import Trainer
 
 
 @hydra.main(config_path="configs", config_name="config.yaml", version_base=None)
@@ -139,7 +139,7 @@ def main(config: DictConfig) -> None:
 
         model.to(device)
 
-        trainer(
+        trainer = Trainer(
             train_dl=train_dl,
             model=model,
             optimizer=optimizer,
@@ -147,6 +147,8 @@ def main(config: DictConfig) -> None:
             epochs=epochs,
             device=device
         )
+
+        trainer.train()
 
         time = str(datetime.datetime.now()).replace(' ', '-')
 
