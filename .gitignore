@@ -2,5 +2,6 @@ data/
 saved_models/
 .envs/
 outputs/
+__pycache__/
 
 temp.py
