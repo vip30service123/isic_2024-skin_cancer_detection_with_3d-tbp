@@ -1,4 +1,5 @@
 
-_target_: src.models.torch.resnet50.Resnet50
-num_classes: 2
-
+model:
+  _target_: src.models.torch.resnet50.Resnet50
+  num_classes: 2
+save_model_path: models/torch/torch_resnet50

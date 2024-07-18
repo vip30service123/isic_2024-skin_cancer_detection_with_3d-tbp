@@ -6,6 +6,8 @@
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
+import datetime
+
 import hydra
 from hydra.utils import instantiate
 from mlflow.models.signature import infer_signature
@@ -46,9 +48,9 @@ def main(config: DictConfig) -> None:
 
         if not train_ds_len and not test_ds_len:
             train_ds = DatasetFromGenerator(train_df['isic_id'].tolist(), train_df['target'].tolist(), config).repeat()
-            test_ds = DatasetFromGenerator(test_df['isic_id'].tolist()[:test_ds_len], test_df['target'].tolist()[:test_ds_len], config).repeat()
+            test_ds = DatasetFromGenerator(test_df['isic_id'].tolist(), test_df['target'].tolist(), config).repeat()
         elif train_ds_len and test_ds_len:
-            train_ds = DatasetFromGenerator(train_df['isic_id'].tolist(), train_df['target'].tolist(), config).repeat()
+            train_ds = DatasetFromGenerator(train_df['isic_id'].tolist()[:train_ds_len], train_df['target'].tolist()[:train_ds_len], config).repeat()
             test_ds = DatasetFromGenerator(test_df['isic_id'].tolist()[:test_ds_len], test_df['target'].tolist()[:test_ds_len], config).repeat()
         else:
             raise Exception("Either full train or train small size on both train and test dataset.")
@@ -125,7 +127,7 @@ def main(config: DictConfig) -> None:
             batch_size=batch_sz
         )
 
-        model = instantiate(config['model'])
+        model = instantiate(config['model']['model'])
 
         partial_optimizer = instantiate(config['training']['optimizer'])
         optimizer = partial_optimizer(params=model.parameters())
@@ -135,6 +137,8 @@ def main(config: DictConfig) -> None:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         print("Device: ", device)
 
+        model.to(device)
+
         trainer(
             train_dl=train_dl,
             model=model,
@@ -143,6 +147,11 @@ def main(config: DictConfig) -> None:
             epochs=epochs,
             device=device
         )
+
+        time = str(datetime.datetime.now()).replace(' ', '-')
+
+        model_save_path = config['model']['save_model_path'] + "_" + time + ".pt"
+        model.save(model_save_path)
 
 if __name__=="__main__":
     main()

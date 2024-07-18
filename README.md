@@ -8,3 +8,4 @@ ISIC 2024 - Skin Cancer Detection with 3D-TBP - Kaggle competition
 - Check all configs before running the programm </br>
 - Modify configs </br>
 - Clean code </br>
+- Change print into log </br>
