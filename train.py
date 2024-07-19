@@ -22,6 +22,7 @@ from src.models.torch.resnet50 import Resnet50 as TorchResnet50
 from src.dataset.dataset_processing import *
 from src.dataset.torch.dataset import CustomDataset
 from src.models.torch.trainer import Trainer
+from src.dataset.torch.transforms import TransformByModel
 
 
 @hydra.main(config_path="configs", config_name="config.yaml", version_base=None)
@@ -76,24 +77,31 @@ def main(config: DictConfig) -> None:
         train_ds_len = config['dataset']['train_ds_len']
         test_ds_len = config['dataset']['test_ds_len']
 
+        model_name = config['model']['model_name']
+        tranform = TransformByModel(model=model_name)
+
         if not train_ds_len and not test_ds_len:
             train_ds = CustomDataset(
                 train_df['isic_id'].tolist(), 
                 train_df['target'].tolist(), 
-                config,)
+                config,
+                transform=tranform)
             test_ds = CustomDataset(
                 test_df['isic_id'].tolist(), 
                 test_df['target'].tolist(), 
-                config,)
+                config,
+                transform=tranform)
         elif train_ds_len and test_ds_len:
             train_ds = CustomDataset(
                 train_df['isic_id'].tolist()[:train_ds_len], 
                 train_df['target'].tolist()[:train_ds_len], 
-                config,)
+                config,
+                transform=tranform)
             test_ds = CustomDataset(
                 test_df['isic_id'].tolist()[:test_ds_len], 
                 test_df['target'].tolist()[:test_ds_len], 
-                config,)
+                config,
+                transform=tranform)
         else:
             raise Exception("Either full train or train small size on both train and test dataset.")
         
@@ -108,6 +116,7 @@ def main(config: DictConfig) -> None:
         )
 
         model = instantiate(config['model']['model'])
+        print("Model: ", config['model']['model_name'])
 
         partial_optimizer = instantiate(config['training']['optimizer'])
         optimizer = partial_optimizer(params=model.parameters())

@@ -1,5 +1,5 @@
 defaults:
-  - model: tf/resnet50.yaml
+  - model: tf/efficientnet.yaml
   - meta_data: meta_data.yaml
   - dataset: tf.yaml
   - training: tf/tf.yaml

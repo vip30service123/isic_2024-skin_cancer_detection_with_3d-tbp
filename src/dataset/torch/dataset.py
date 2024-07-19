@@ -40,7 +40,7 @@ class CustomDataset(Dataset):
 
         with h5py.File(self.config['dataset']['directory'], "r") as f:
             im = Image.open(io.BytesIO(f[item_id][()]))
-
+            im = im.resize((256, 256))
             pix = np.array(im)
 
         pix = self.transform(pix)

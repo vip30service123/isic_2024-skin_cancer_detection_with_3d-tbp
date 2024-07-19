@@ -1,0 +1,6 @@
+model:
+  _target_: src.models.torch.efficientnet.EfficientNet
+  num_classes: 2  
+  model_type: 'b0'
+model_name: efficientnet_b0
+save_model_path: saved_models/torch/torch_efficientnet
